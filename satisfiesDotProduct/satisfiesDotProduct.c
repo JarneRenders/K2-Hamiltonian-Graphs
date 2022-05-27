@@ -442,6 +442,9 @@ int c, int d, bool verboseFlag) {
 	// Loop over all pairs vw with v < w.
 	for(int i = 0; i < nVertices; i++) {
 		forEachAfterIndex(nbr, adjacencyList[i], i) { 
+			if((i == a && nbr == b) || (i == b && nbr == a) || (i == c && nbr == d) || (i==d && nbr == c)) {
+				continue;
+			}
 
 			if(verboseFlag) {
 				fprintf(stderr, "G - %d - %d:\n", i, nbr);
