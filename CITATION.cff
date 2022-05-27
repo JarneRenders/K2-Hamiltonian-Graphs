@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Goedgebeur"
+  given-names: "Jan"
+- family-names: "Renders"
+  given-names: "Jarne"
+- family-names: "Wiener"
+  given-names: "Gábor"
+- family-names: "Zamfirescu"
+  given-names: "Carol T."
+title: "K2-Hamiltonian Graphs"
+version: 1
+date-released: 2022-05-27
+url: "https://github.com/JarneRenders/K2-Hamiltonian-Graphs"
