@@ -382,7 +382,7 @@ verboseFlag, bool allCyclesFlag, int vertexPairToCheck[]) {
     return !encounteredNonHamSubgraph;
 }
 
-bool containsHamiltonianPathWithEnds(bitset adjacencyList[], int
+int containsHamiltonianPathWithEnds(bitset adjacencyList[], int
 numberOfVertices, bitset excludedVertices, int start, int end, bool
 allCyclesFlag, bool verboseFlag) {
     
@@ -413,7 +413,7 @@ allCyclesFlag, bool verboseFlag) {
     verboseFlag);
 
     if(allCyclesFlag) {
-       fprintf(stderr,"There were %d Hamiltonian (%d,%d)-paths in this graph.\n\n",
+       fprintf(stderr,"There were %d hamiltonian (%d,%d)-paths in this graph.\n\n",
         nOfPaths, start, end);
     }
 
@@ -530,3 +530,79 @@ verticesContainedByPath2, bool allCyclesFlag, bool verboseFlag) {
     return isPart;
 }
 
+bool isTraceable(bitset adjacencyList[], int numberOfVertices, bitset
+excludedVertices, bool allCyclesFlag, bool verboseFlag) {
+    long long unsigned nOfPaths = 0;
+    for(int i = 0; i < numberOfVertices; i++) {
+        for(int j = i + 1; j < numberOfVertices; j++) {
+            int nOfPathsWithEnds;
+            if((nOfPathsWithEnds = containsHamiltonianPathWithEnds(
+             adjacencyList, numberOfVertices, excludedVertices, i, j,
+             allCyclesFlag, verboseFlag))) {
+                if(!allCyclesFlag) {
+                    return true;
+                }
+                nOfPaths += nOfPathsWithEnds;
+            }
+        }
+    }
+    if(allCyclesFlag) {
+        fprintf(stderr, "There were %llu hamiltonian paths in the (sub)graph\n", nOfPaths);
+    }
+    return nOfPaths;
+}
+
+bool isK1Traceable(bitset adjacencyList[], int numberOfVertices, bool
+allCyclesFlag, bool verboseFlag, int vertexToCheck) {
+
+    //  An exceptional vertex is one for which the vertex-deleted subgraph is
+    //  non-traceable. 
+    bitset exceptionalVertices = EMPTY;
+
+    //  Loop over all vertices and determine whether the vertex-deleted
+    //  subgraph is traceable.
+    for (int i = 0; i < numberOfVertices; i++) {
+        bitset excludedVertices = singleton(i);
+        if(!verboseFlag) {
+            if(!(isTraceable(adjacencyList,numberOfVertices,excludedVertices,
+             false, false))) {
+                return false;
+            }
+            continue;
+        }
+
+        //  The following gets executed only if -v is present.
+        bool verbose = false;
+        bool cycles = false;
+
+        //  vertexToCheck is determined by -v#.
+        if(vertexToCheck == i) {
+            verbose = true;
+            cycles  = allCyclesFlag;
+            fprintf(stderr, "Looking at G - %d.\n", vertexToCheck);
+        }
+        if (!(isTraceable(adjacencyList, numberOfVertices, excludedVertices,
+         cycles, verbose))) {
+            add(exceptionalVertices, i);
+        }
+    }
+
+    //  Print out the exceptional vertices.
+    int nOfExceptionalVertices = size(exceptionalVertices);
+    if(verboseFlag) {
+        if(nOfExceptionalVertices) {
+            fprintf(stderr, "There are %d exceptional vertices: {",
+             nOfExceptionalVertices);
+            forEach(excVertex, exceptionalVertices) {
+                fprintf(stderr, "%d, ", excVertex);
+            }
+            fprintf(stderr, "\b\b}\n");
+        }
+        else {
+            fprintf(stderr, "No exceptional vertices.\n");
+        }
+    }
+
+    //  Zero if there are exceptional vertices, non-zero otherwise.
+    return !nOfExceptionalVertices;
+}

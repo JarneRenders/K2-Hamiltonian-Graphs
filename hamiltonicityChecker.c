@@ -6,7 +6,7 @@
  */
 
 #define USAGE \
-"\nUsage: `./hamiltonicityChecker [-1|-2] [-n] [-c] [-v] [-v#] [-v#,#] [-a] [-h] [res/mod]`\n"
+"\nUsage: `./hamiltonicityChecker [-t] [-1|-2] [-n] [-c] [-v] [-v#] [-v#,#] [-a] [-h] [res/mod]`\n"
 
 #define HELPTEXT \
 "Filter graphs satisfying certain hamiltonicity requirements.\n\
@@ -36,6 +36,8 @@ The order in which the arguments appear does not matter.\n\
     -n, --assume-non-hamiltonian\n\
             let all graphs pass the non-hamiltonicity check; does not check\n\
             whether the graphs are actually non-hamiltonian\n\
+    -t, --traceable\n\
+    		check for hamiltonian paths instead of cycles\n\
     -v, --verbose\n\
             verbose mode; if -a is absent prints one hamiltonian cycle (if one\n\
             exists); if -a is present prints all hamiltonian cycles; if\n\
@@ -59,6 +61,15 @@ verboseFlag, bool assumeNonHamFlag, bool allCyclesFlag) {
 		return true;
 	}
 	return !isHamiltonian(adjacencyList,nVertices, EMPTY, allCyclesFlag,
+     verboseFlag);
+} 
+
+bool isNonTraceableOrAssumedNonTraceable(bitset adjacencyList[], int
+nVertices, bool verboseFlag, bool assumeNonHamFlag, bool allCyclesFlag) {
+	if(assumeNonHamFlag) {
+		return true;
+	}
+	return !isTraceable(adjacencyList,nVertices, EMPTY, allCyclesFlag,
      verboseFlag);
 } 
 
@@ -94,6 +105,7 @@ int main(int argc, char ** argv) {
 	bool allCyclesFlag = false;
 	bool haveModResPair = false;
 	bool complementFlag = false;
+	bool traceableFlag = false;
 	int mod, res;
 	int vertexToCheck = -1;
 	int vertexPairToCheck[2] = {-1,-1};
@@ -102,17 +114,18 @@ int main(int argc, char ** argv) {
     	int option_index = 0;
     	static struct option long_options[] = 
     	{
-        	{"K1-hamiltonian",  		no_argument, NULL,  '1'},
-        	{"K2-hamiltonian",  		no_argument, NULL,  '2'},
+        	{"K1",  					no_argument, NULL,  '1'},
+        	{"K2",  					no_argument, NULL,  '2'},
         	{"all-cycles",				no_argument, NULL,	'a'},
         	{"complement", 				no_argument, NULL, 	'c'},
         	{"help", 					no_argument, NULL,  'h'},
         	{"assume-non-hamiltonian",  no_argument, NULL,  'n'},
+        	{"traceable", 				no_argument, NULL, 	't'},
         	{"verbose", 				optional_argument, NULL, 'v'},
         	{NULL,      				0, 			 NULL,    0}
     	};
 
-    	opt = getopt_long(argc, argv, "12achnv::", long_options, &option_index);
+    	opt = getopt_long(argc, argv, "12achntv::", long_options, &option_index);
     	if (opt == -1) break;
 		switch(opt) {
 			case '1':
@@ -134,6 +147,9 @@ int main(int argc, char ** argv) {
 			case 'n':
 				assumeNonHamFlag = true;
 				break;
+			case 't':
+				traceableFlag = true;
+				break;
 			case 'v':
 
                 // TODO: Make this more safe and perhaps allow for multiple
@@ -153,6 +169,11 @@ int main(int argc, char ** argv) {
         		return 1;
 		}
 	}
+
+	int optionsNumber = (K1flag ? 1 : 0) |
+						(K2flag ? 2 : 0) |
+						(assumeNonHamFlag ? 4 : 0) |
+						(traceableFlag ? 8 : 0);
 
 	//	Loop over non-option arguments.
 	while (optind < argc) {
@@ -177,8 +198,25 @@ int main(int argc, char ** argv) {
 		optind++;
 	}
 
-	if (K1flag && K2flag) {
+	if (optionsNumber % 4 == 3) {
 		fprintf(stderr,"Error: Do not use these flags simultaneously.\n");
+		fprintf(stderr, "%s\n", USAGE);
+        fprintf(stderr,
+         "Use ./hamiltonicityChecker --help for more detailed instructions.\n");
+		return 1;
+	}
+
+	if (optionsNumber == 10 || optionsNumber == 14) {
+		fprintf(stderr,"Error: Not yet implemented.\n");
+		fprintf(stderr, "%s\n", USAGE);
+        fprintf(stderr,
+         "Use ./hamiltonicityChecker --help for more detailed instructions.\n");
+		return 1;
+	}
+
+	//	Only -n or -t and -n are present
+	if(optionsNumber % 8 == 4) {
+		fprintf(stderr,"Error: Use this flag only in combination with -1 or -2.\n");
 		fprintf(stderr, "%s\n", USAGE);
         fprintf(stderr,
          "Use ./hamiltonicityChecker --help for more detailed instructions.\n");
@@ -243,7 +281,31 @@ int main(int argc, char ** argv) {
 			fprintf(stderr, "Looking at: %s", graphString);
 		}
 
-		if(isNonHamOrAssumedNonHam(adjacencyList,nVertices,verboseFlag,
+		if(traceableFlag) {
+			if(isNonTraceableOrAssumedNonTraceable(adjacencyList, nVertices,
+			 verboseFlag, assumeNonHamFlag, allCyclesFlag)) {
+				nonHamiltonianCounter++;
+				if(K1flag) {
+					if(isK1Traceable(adjacencyList, nVertices, allCyclesFlag,
+					 verboseFlag, vertexToCheck)) {
+						if(!complementFlag) {
+							printf("%s", graphString);
+							amountPassed++;
+						}
+					}
+					else if(complementFlag) {
+						printf("%s", graphString);
+						amountPassed++;
+					}
+				}
+			}
+			else if(complementFlag) {
+				printf("%s", graphString);
+				amountPassed++;
+			}
+		}
+
+		else if(isNonHamOrAssumedNonHam(adjacencyList,nVertices,verboseFlag,
          assumeNonHamFlag,allCyclesFlag)){
 			nonHamiltonianCounter++;
 			if(shouldWriteGraph(adjacencyList,nVertices,verboseFlag,
@@ -276,26 +338,86 @@ int main(int argc, char ** argv) {
 		compString = "not ";
 	}
 
-	if (!assumeNonHamFlag && !complementFlag) {
-		fprintf(stderr,"%lld are non-hamiltonian, ", nonHamiltonianCounter);
-	}
-	if(complementFlag && !K1flag && !K2flag && !assumeNonHamFlag) {
-		fprintf(stderr, "%lld are hamiltonian, ", amountPassed);
-	}
-	if(complementFlag && !K1flag && !K2flag && assumeNonHamFlag) {
-		fprintf(stderr, "all graphs are assumed to be non-hamiltonian, ");
-	}
-	if (K1flag && !assumeNonHamFlag) {
-		fprintf(stderr,"%lld are %shypohamiltonian, ", amountPassed, compString);
-	}
-	if (K1flag && assumeNonHamFlag) {
-		fprintf(stderr,"%lld are %sK1-hamiltonian, ", amountPassed, compString);
-	}
-	if (K2flag && !assumeNonHamFlag) {
-		fprintf(stderr,"%lld are %sK2-hypohamiltonian, ", amountPassed, compString);
-	}
-	if (K2flag && assumeNonHamFlag) {
-		fprintf(stderr,"%lld are %sK2-hamiltonian, ", amountPassed, compString);
+	switch(optionsNumber) {
+		//	hamiltonicity check
+		case 0:
+			if(!complementFlag) {
+				fprintf(stderr, "%lld are non-hamiltonian, ", nonHamiltonianCounter);
+			}
+			else {
+				fprintf(stderr, "%lld are hamiltonian, ", amountPassed);
+			}
+			break;
+
+		//	hypohamiltonicity check
+		case 1:
+			if(!complementFlag) {
+				fprintf(stderr,"%lld are non-hamiltonian, ", nonHamiltonianCounter);
+			}
+			fprintf(stderr,"%lld are %shypohamiltonian, ", amountPassed, compString);
+			break;
+
+		//	K2-hypohamiltonicity check
+		case 2:
+			if(!complementFlag) {
+				fprintf(stderr,"%lld are non-hamiltonian, ", nonHamiltonianCounter);
+			}
+			fprintf(stderr,"%lld are %sK2-hypohamiltonian, ", amountPassed, compString);
+			break;
+		case 3:
+			//	Cannot occur
+			break;
+		case 4:
+			//	Cannot occur
+			break;
+
+		//	K1-hamiltonicity check
+		case 5:
+			fprintf(stderr,"%lld are %sK1-hamiltonian, ", amountPassed, compString);
+			break;
+		//	K2-hamiltonicity check
+		case 6:
+			fprintf(stderr,"%lld are %sK2-hamiltonian, ", amountPassed, compString);
+			break;
+		case 7:
+			//	-1 and -2 cannot occur.
+			break;
+
+		//	traceability check
+		case 8:
+			if(!complementFlag) {
+				fprintf(stderr, "%lld are non-traceable, ", nonHamiltonianCounter);
+			}
+			else {
+				fprintf(stderr, "%lld are traceable, ", amountPassed);
+			}
+			break;
+
+		//	hypotraceability check
+		case 9:
+			if(!complementFlag) {
+				fprintf(stderr,"%lld are non-traceable, ", nonHamiltonianCounter);
+			}
+			fprintf(stderr, "%lld are %shypotraceable, ", amountPassed, compString);
+			break;
+		case 10:
+			//	K2-hypotraceability not implemented.
+			break;
+		case 11:
+			// -1 and -2 cannot occur.
+		case 12:
+			//	Should not occur
+			break;
+		case 13:
+			fprintf(stderr, "%lld are %sK1-traceable, ", amountPassed, compString);
+			break;
+		case 14:
+			//	K2-traceability not implemented.
+			break;
+		case 15:
+			//	-1 and -2 cannot occur.
+			break;
+
 	}
 	fprintf(stderr,"\b\b.\n");
     if(skippedGraphs) {

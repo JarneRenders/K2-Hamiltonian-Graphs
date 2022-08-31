@@ -18,7 +18,7 @@ These programs all use Brendan McKay's graph6 format to read and write graphs. S
 
 The latest version of this program can be obtained from: <https://github.com/JarneRenders/K2-Hamiltonian-Graphs/>.
 
-This program can be used to filter non-hamiltonian, hypohamiltonian (i.e. non-hamiltonian and K1-hamiltonian) or K2-hypohamiltonian (i.e. non-hamiltonian and K2-hamiltonian) graphs out of a list of graphs. One can also filter the graphs which are K1-hamiltonian, K2-hamiltonian or any complement of these options by passing arguments to the program.
+This program can be used to filter non-hamiltonian, hypohamiltonian (i.e. non-hamiltonian and K1-hamiltonian), K2-hypohamiltonian (i.e. non-hamiltonian and K2-hamiltonian), non-traceable or hypotraceable (i.e. non-traceable and K1-traceable) graphs out of a list of graphs. One can also filter the graphs which are K1-hamiltonian, K2-hamiltonian, K1-traceable or any complement of these options by passing arguments to the program. By K1-traceable we mean graphs for which every vertex-deleted subgraph is traceable.
 
 The program supports graphs up to and including 128 vertices.
 
@@ -37,7 +37,7 @@ The 64-bit version supports graphs only up to 64 vertices, the 128-bit versions 
 
 All options can be found by executing `./hamiltonicityChecker -h`.
 
-Usage: `./hamiltonicityChecker [-1|-2] [-n] [-c] [-v] [-v#] [-v#,#] [-a] [-h] [res/mod]`
+Usage: `./hamiltonicityChecker [-t] [-1|-2] [-n] [-c] [-v] [-v#] [-v#,#] [-a] [-h] [res/mod]`
 
 Filter graphs satisfying certain hamiltonicity requirements.
 
@@ -56,7 +56,9 @@ The order in which the arguments appear does not matter, unless multiple instanc
 	-h, --help
 		print help message
 	-n, --assume-non-hamiltonian		
-		let all graphs pass the non-hamiltonicity check; does not check whether the graphs are actually non-hamiltonian  
+		let all graphs pass the non-hamiltonicity check; does not check whether the graphs are actually non-hamiltonian
+	-t, --traceable
+    	check for hamiltonian paths instead of cycles
 	-v, --verbose				
 		verbose mode; if -a is absent prints one hamiltonian cycle (if one exists); if -a is present prints all hamiltonian cycles; if entering -v# or -v#1,#2 where # represents vertices of the graph, a (or all) hamiltonian cycles of respectively G - # if -1 is present or G - #1 - #2 if -2 is present will be printed
 ```
@@ -66,11 +68,17 @@ The order in which the arguments appear does not matter, unless multiple instanc
 `./hamiltonicityChecker`
 Sends all non-hamiltonian graphs from stdin to stdout.
 
+`./hamiltonicityChecker -t`
+Sends all non-traceable graphs from stdin to stdout.
+
 `./hamiltonicityChecker -2`
 Sends all non-hamiltonian K2-hamiltonian (K2-hypohamiltonian) graphs from stdin to stdout.
 
 `./hamiltonicityChecker -n1`
 Skips the hamiltonicity check but filters graphs which are not K1-hamiltonian. Precisely the K1-hamiltonian graphs are sent to stdout.
+
+`./hamiltonicityChecker -t1`
+Sends all non-traceable K1-traceable (hypotraceable) graphs from stdin to stdout.
 
 `./hamiltonicityChecker -cn2`
 Sends the complement of all K2-hamiltonian graphs (argument -n ignores the hamiltonicity check) to stdout, i.e. all non-K2-hamiltonian graphs.
@@ -94,6 +102,7 @@ Sends the K2-hypohamiltonian graphs to stdout and sends to stderr how many hamil
 ### Changelog
 
 * 2022-05-23 First release.
+* 2022-08-31 Added traceability and hypotraceability check.
 
 
 

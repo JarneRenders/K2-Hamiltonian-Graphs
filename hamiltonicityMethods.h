@@ -163,15 +163,15 @@ verboseFlag, bool allCyclesFlag, int vertexPairToCheck[]);
 
 
 /**
- * Returns a boolean indicating whether or not the (sub)graph contains a
+ * Returns an integer indicating whether or not the (sub)graph contains a
  * hamiltonian path with specified endpoints.
  * 
- *  @param  adjacencyList   An array of bitsets representing the adjacency
- *   list of the given graph.
- *  @param  numberOfVertices    The number of vertices in the graph.
- *  @param  excludedVertices    A bitset representing the vertices we ban from
- *   our graph. We check whether the subgraph spanned by all vertices not
- *   contained in exludedVertices contains a hamiltonian path or not.
+ * @param  adjacencyList   An array of bitsets representing the adjacency list
+ *  of the given graph.
+ * @param  numberOfVertices    The number of vertices in the graph.
+ * @param  excludedVertices    A bitset representing the vertices we ban from
+ *  our graph. We check whether the subgraph spanned by all vertices not
+ *  contained in exludedVertices contains a hamiltonian path or not.
  * @param   start   One of the endpoints between which we want to find a
  *  hamiltonian path.
  * @param   end     The other endpoint between which we want to find a
@@ -182,10 +182,11 @@ verboseFlag, bool allCyclesFlag, int vertexPairToCheck[]);
  *  hamiltonian paths there are between start and end. If verboseFlag is
  *  true, we print all of these.
  * 
- * @return True if there exists a hamiltonian path between start and end in
- *  the (sub)graph
+ * @return Non-zero if there exists a hamiltonian path between start and end
+ *  in the (sub)graph and zero otherwise. If allCyclesFlag is present, the
+ *  return value is the number of hamiltonian paths between the endpoints
  * */
-bool containsHamiltonianPathWithEnds(bitset adjacencyList[], int
+int containsHamiltonianPathWithEnds(bitset adjacencyList[], int
 numberOfVertices, bitset excludedNodes, int start, int end, bool verboseFlag,
 bool allCyclesFlag);
 
@@ -220,5 +221,51 @@ bool containsDisjointSpanningPathsWithEnds(bitset adjacencyList[], int
 numberOfVertices, bitset excludedVertices, int startOfPath1, int endOfPath1,
 bitset verticesContainedByPath1, int startOfPath2, int endOfPath2, bitset
 verticesContainedByPath2, bool allCyclesFlag, bool verboseFlag);
+
+
+/**
+ * Returns a boolean indicating whether or not the (sub)graph is traceable,
+ * i.e., contains some hamiltonian path.
+ *  @param  adjacencyList   An array of bitsets representing the adjacency
+ *   list of the given graph.
+ *  @param  numberOfVertices    The number of vertices in the graph.
+ *  @param  excludedVertices    A bitset representing the vertices we ban from
+ *   our graph. We check whether the subgraph spanned by all vertices not
+ *   contained in exludedVertices contains two disjoint spanning paths.
+ *  @param  allCyclesFlag   If this boolean is true, we count how many
+ *   hamiltonian paths there are in the graph. If verboseflag is also true
+ *   all these paths get printed and sorted by their endpoints.
+ *  @param  verboseFlag If this boolean is true, we print a hamiltonian path.
+ * 
+ *  @return True if (sub)graph is traceable, false otherwise.
+ * */
+bool isTraceable(bitset adjacencyList[], int numberOfVertices, bitset
+excludedVertices, bool allCyclesFlag, bool verboseFlag);
+
+/**
+ *  Returns a boolean indicating whether the graph is K1-traceable, i.e.
+ *  deleting any copy of K1 (a single vertex), yields a traceable graph for
+ *  every vertex.
+ * 
+ *  @param  adjacencyList   Array of bitsets representing the adjacency list
+ *   of the original graph.
+ *  @param  numberOfVertices The number of vertices in the original graph.
+ *  @param  verboseFlag     Boolean, which if true indicates which vertex-deleted
+ *   subgraphs are non-traceable (i.e. which vertices are exceptional). If
+ *   vertexToCheck is in the graph it prints out (if any exist) a hamiltonian
+ *   path in G - vertexToCheck.
+ *  @param  allCyclesFlag   Boolean, which if true and if vertexToCheck is in
+ *   the graph counts or prints out all hamiltonian paths in G -
+ *   vertexToCheck depending on the value of verboseFlag.
+ *  @param  vertexToCheck   If this represents a vertex in the graph a
+ *   hamiltonian path (if any exist) of G - vertexToCheck will be printed if
+ *   verboseFlag is true or all hamiltonian paths will be printed if
+ *   allCyclesFlag and verboseFlag are true or all hamiltonian cycles will be
+ *   counted if allCyclesFlag is true, but verboseFlag is false.  
+ * 
+ *  @return True if the graph is K1-traceable, false otherwise.
+ * */
+bool isK1Traceable(bitset adjacencyList[], int numberOfVertices, bool
+allCyclesFlag, bool verboseFlag, int vertexToCheck);
 
 #endif
