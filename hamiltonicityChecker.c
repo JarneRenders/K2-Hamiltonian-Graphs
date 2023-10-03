@@ -298,6 +298,9 @@ int main(int argc, char ** argv) {
                         amountPassed++;
                     }
                 }
+                else if(!complementFlag) {
+                    printf("%s", graphString);
+                }
             }
             else if(complementFlag) {
                 printf("%s", graphString);
